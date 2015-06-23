@@ -1,5 +1,6 @@
 package com.popalay.bmxspots.fragment;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -16,6 +17,7 @@ import com.github.gorbin.asne.core.listener.OnRequestSocialPersonCompleteListene
 import com.github.gorbin.asne.core.persons.SocialPerson;
 import com.github.gorbin.asne.vk.VkSocialNetwork;
 import com.parse.LogInCallback;
+import com.parse.LogOutCallback;
 import com.parse.ParseException;
 import com.parse.ParseUser;
 import com.parse.SignUpCallback;
@@ -25,11 +27,30 @@ import com.vk.sdk.VKScope;
 
 import java.util.List;
 
-public class AuthFragment extends Fragment implements SocialNetworkManager.OnInitializationCompleteListener, OnLoginCompleteListener, OnRequestSocialPersonCompleteListener {
+public class AuthFragment extends Fragment implements SocialNetworkManager.OnInitializationCompleteListener,
+        OnLoginCompleteListener, OnRequestSocialPersonCompleteListener {
+
+    public interface SocialFragmentListener {
+        void loggedInSocialNetwork(int networkID);
+    }
+
+    public static final String TAG = "AuthFragment";
 
     private Button vk;
 
+    private SocialFragmentListener socialFragmentListener;
+
     public AuthFragment() {
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            socialFragmentListener = (SocialFragmentListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement onSomeEventListener");
+        }
     }
 
     @Override
@@ -85,7 +106,7 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
                 case VkSocialNetwork.ID:
                     break;
             }
-            toMain(socialNetwork.getID());
+            logged(socialNetwork.getID());
         }
     }
 
@@ -103,20 +124,20 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
         public void onClick(View view) {
             Log.d("click", "loginClick()");
             int networkId = 0;
-            switch (view.getId()){
+            switch (view.getId()) {
                 case R.id.vk:
                     networkId = VkSocialNetwork.ID;
                     break;
             }
             SocialNetwork socialNetwork = MainActivity.mSocialNetworkManager.getSocialNetwork(networkId);
-            if(!socialNetwork.isConnected()) {
-                if(networkId != 0) {
+            if (!socialNetwork.isConnected()) {
+                if (networkId != 0) {
                     socialNetwork.requestLogin();
                     MainActivity.showProgress("Loading vk person");
                 } else {
                     Toast.makeText(getActivity(), "Wrong networkId", Toast.LENGTH_LONG).show();
                 }
-            }else {
+            } else {
                 Toast.makeText(getActivity(), "You are in app", Toast.LENGTH_SHORT).show();
             }
         }
@@ -145,7 +166,7 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
 
     }
 
-    private void registerOrLoginUser(final int networkID, final String id, final String name, String avatar){
+    private void registerOrLoginUser(final int networkID, final String id, final String name, String avatar) {
 
         ParseUser newUser = new ParseUser();
         newUser.setUsername(name);
@@ -153,7 +174,7 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
 
         // other fields can be set just like with ParseObject
         newUser.put("avatar", avatar);
-        if(newUser.isNew()) {
+        if (newUser.isNew()) {
             newUser.signUpInBackground(new SignUpCallback() {
                 public void done(ParseException e) {
                     if (e == null) {
@@ -164,29 +185,25 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
                     }
                 }
             });
-        }else {
-            signIn(networkID, name,id);
+        } else {
+            signIn(networkID, name, id);
         }
     }
 
     private void signIn(final int networkID, String name, String password) {
-        ParseUser.logInInBackground(name, password, new LogInCallback(){
-        public void done(ParseUser user, ParseException e) {
-            if (user != null) {
-                toMain(networkID);
-            } else {
-                // Signup failed. Look at the ParseException to see what happened.
+        ParseUser.logInInBackground(name, password, new LogInCallback() {
+            public void done(ParseUser user, ParseException e) {
+                if (user != null) {
+                    logged(networkID);
+                } else {
+                    // Signup failed. Look at the ParseException to see what happened.
+                }
             }
-        }
-    });
+        });
     }
 
-    private void toMain(int networkID) {
+    private void logged(int networkID) {
         Log.d("networkID", "inLogin: " + networkID);
-        MainFragment main = MainFragment.newInstance(networkID);
-        getActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, main)
-                //.addToBackStack("auth")
-                .commit();
+        socialFragmentListener.loggedInSocialNetwork(networkID);
     }
 }

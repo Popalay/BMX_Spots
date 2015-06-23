@@ -1,6 +1,7 @@
 package com.popalay.bmxspots.fragment;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
@@ -16,7 +17,13 @@ import com.parse.ParseUser;
 import com.popalay.bmxspots.MainActivity;
 import com.popalay.bmxspots.R;
 
-public class MainFragment  extends Fragment {
+public class MainFragment extends Fragment {
+
+    public interface MainFragmentListener {
+        void notLoggedInSocialNetwork();
+    }
+
+    public static final String TAG = "MainFragment";
 
     private static final String NETWORK_ID = "NETWORK_ID";
 
@@ -24,8 +31,9 @@ public class MainFragment  extends Fragment {
     private int networkId;
 
     private Toolbar toolbar;
-    View rootView;
-    Button logout;
+    private View rootView;
+    private Button logout;
+    private MainFragmentListener mainFragmentListener;
 
 
     public MainFragment() {
@@ -37,6 +45,16 @@ public class MainFragment  extends Fragment {
         args.putInt(NETWORK_ID, id);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mainFragmentListener = (MainFragmentListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement onSomeEventListener");
+        }
     }
 
     @Override
@@ -71,20 +89,13 @@ public class MainFragment  extends Fragment {
         public void onClick(View view) {
             Log.d("click", "logoutClick()");
             logout();
-            getAuth();
         }
     };
-
-    private void getAuth() {
-        getActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, MainActivity.authFragment)
-                //.addToBackStack("main")
-                .commit();
-    }
 
     private void logout() {
         socialNetwork.logout();
         ParseUser.logOut();
+        mainFragmentListener.notLoggedInSocialNetwork();
     }
 
 

@@ -5,23 +5,25 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.FragmentActivity;
 
 import com.github.gorbin.asne.core.SocialNetworkManager;
 import com.parse.Parse;
 import com.parse.ParseObject;
 import com.popalay.bmxspots.fragment.AuthFragment;
+import com.popalay.bmxspots.fragment.MainFragment;
 
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends FragmentActivity implements AuthFragment.SocialFragmentListener, MainFragment.MainFragmentListener{
 
     public static final String SOCIAL_NETWORK_TAG = "SocialIntegrationMain.SOCIAL_NETWORK_TAG";
     public static SocialNetworkManager mSocialNetworkManager;
 
-    public static AuthFragment authFragment;
-
     private static ProgressDialog pd;
-    static Context context;
+    private static Context context;
+
+    private AuthFragment authFragment;
+    private MainFragment mainFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +52,11 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void toLogin() {
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.container, authFragment)
-                .commit();
+        if(getSupportFragmentManager().findFragmentByTag(AuthFragment.TAG) == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.container, authFragment, AuthFragment.TAG)
+                    .commit();
+        }
     }
 
     public static void showProgress(String message) {
@@ -78,4 +82,22 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
+    @Override
+    public void loggedInSocialNetwork(int networkID) {
+        if(getSupportFragmentManager().findFragmentByTag(MainFragment.TAG) == null) {
+            mainFragment = MainFragment.newInstance(networkID);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container, mainFragment)
+                    .commit();
+        }
+    }
+
+    @Override
+    public void notLoggedInSocialNetwork() {
+        if(getSupportFragmentManager().findFragmentByTag(AuthFragment.TAG) == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container, authFragment)
+                    .commit();
+        }
+    }
 }

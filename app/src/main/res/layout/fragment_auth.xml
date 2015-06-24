@@ -3,16 +3,30 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorBackground">
+    android:background="@color/authBackground">
 
     <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Login via VK"
+        android:text="@string/vk_btn_text"
         android:id="@+id/vk"
         android:layout_gravity="center_horizontal"
         android:background="@color/vk"
         android:layout_margin="8dp"
-        android:textColor="@color/colorText" />
+        android:textColor="@color/colorText"
+        android:drawableStart="@drawable/vk"
+        android:elevation="1dp"/>
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/vk_btn_text"
+        android:id="@+id/gp"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/gp"
+        android:layout_margin="8dp"
+        android:textColor="@color/colorText"
+        android:drawableStart="@drawable/gp"
+        android:elevation="1dp"/>
 
 </LinearLayout>

@@ -6,4 +6,7 @@
     <string name="search_title">Search</string>
 
     <string name="vk_app_id">4964885</string>
+
+    <string name="vk_btn_text">Sign in with Vkontakte</string>
+    <string name="gp_btn_text">Sign in with Google+</string>
 </resources>

@@ -3,8 +3,11 @@
     <color name="colorPrimary">#4CAF50</color>
     <color name="colorPrimaryDark">#388E3C</color>
     <color name="colorAccent">#FF5252</color>
-    <color name="colorBackground">#E2E2E2</color>
+    <color name="mainBackground">#E2E2E2</color>
     <color name="colorText">#FFFF</color>
 
+    <color name="authBackground">#388E3C</color>
+
     <color name="vk">#36638e</color>
+    <color name="gp">#B71C1C</color>
 </resources>

@@ -28,11 +28,8 @@ public class MainFragment extends Fragment {
     private static final String NETWORK_ID = "NETWORK_ID";
 
     private SocialNetwork socialNetwork;
-    private int networkId;
 
-    private Toolbar toolbar;
     private View rootView;
-    private Button logout;
     private MainFragmentListener mainFragmentListener;
 
 
@@ -61,10 +58,10 @@ public class MainFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        logout = (Button) rootView.findViewById(R.id.logout);
+        Button logout = (Button) rootView.findViewById(R.id.logout);
         logout.setOnClickListener(logoutClick);
 
-        networkId = getArguments().containsKey(NETWORK_ID) ? getArguments().getInt(NETWORK_ID) : 0;
+        int networkId = getArguments().containsKey(NETWORK_ID) ? getArguments().getInt(NETWORK_ID) : 0;
         socialNetwork = MainActivity.mSocialNetworkManager.getSocialNetwork(networkId);
 
         initToolbar();
@@ -72,7 +69,7 @@ public class MainFragment extends Fragment {
     }
 
     private void initToolbar() {
-        toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         toolbar.setTitle(R.string.app_name);
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override

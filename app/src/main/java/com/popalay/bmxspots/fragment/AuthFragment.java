@@ -17,7 +17,6 @@ import com.github.gorbin.asne.core.listener.OnRequestSocialPersonCompleteListene
 import com.github.gorbin.asne.core.persons.SocialPerson;
 import com.github.gorbin.asne.vk.VkSocialNetwork;
 import com.parse.LogInCallback;
-import com.parse.LogOutCallback;
 import com.parse.ParseException;
 import com.parse.ParseUser;
 import com.parse.SignUpCallback;
@@ -35,8 +34,6 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
     }
 
     public static final String TAG = "AuthFragment";
-
-    private Button vk;
 
     private SocialFragmentListener socialFragmentListener;
 
@@ -57,7 +54,7 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_auth, container, false);
         // init buttons and set Listener
-        vk = (Button) rootView.findViewById(R.id.vk);
+        Button vk = (Button) rootView.findViewById(R.id.vk);
         vk.setOnClickListener(loginClick);
 
         //Get Keys for initiate SocialNetworks
@@ -182,6 +179,7 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
                     } else {
                         // Sign up didn't succeed. Look at the ParseException
                         // to figure out what went wrong
+                        Log.d(TAG, e.getMessage() );
                     }
                 }
             });
@@ -197,6 +195,7 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
                     logged(networkID);
                 } else {
                     // Signup failed. Look at the ParseException to see what happened.
+                    Log.d(TAG, e.getMessage() );
                 }
             }
         });

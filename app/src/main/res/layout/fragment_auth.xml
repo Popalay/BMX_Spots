@@ -3,30 +3,42 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/authBackground">
+    android:background="@color/authBackground"
+    android:gravity="center" >
 
-    <Button
-        android:layout_width="fill_parent"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/vk_btn_text"
-        android:id="@+id/vk"
-        android:layout_gravity="center_horizontal"
-        android:background="@color/vk"
-        android:layout_margin="8dp"
-        android:textColor="@color/colorText"
-        android:drawableStart="@drawable/vk"
-        android:elevation="1dp"/>
+        android:layout_marginTop="50dp" >
 
-    <Button
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/vk_btn_text"
-        android:id="@+id/gp"
-        android:layout_gravity="center_horizontal"
-        android:background="@color/gp"
-        android:layout_margin="8dp"
-        android:textColor="@color/colorText"
-        android:drawableStart="@drawable/gp"
-        android:elevation="1dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:id="@+id/auth_text"
+            android:textSize="@dimen/text_auth"
+            android:textColor="@color/colorText"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center">
+
+        <Button style="@style/SocialButton"
+            android:text="@string/vk_btn_text"
+            android:id="@+id/vk"
+            android:background="@drawable/vk_social_button"
+            android:drawableStart="@drawable/vk" />
+
+        <Button style="@style/SocialButton"
+            android:text="@string/gp_btn_text"
+            android:id="@+id/gp"
+            android:background="@drawable/gp_social_button"
+            android:drawableStart="@drawable/gp" />
+    </LinearLayout>
 
 </LinearLayout>

@@ -9,4 +9,13 @@
 
     <string name="vk_btn_text">Sign in with Vkontakte</string>
     <string name="gp_btn_text">Sign in with Google+</string>
+
+    <string name="home_string">Home</string>
+    <string name="my_string">My spots</string>
+    <string name="favorite_string">Favorite spots</string>
+    <string name="information_string">Information</string>
+    <string name="logout_string">Logout</string>
+
+    <string name="closeDrawer">Navigation View</string>
+    <string name="openDrawer">Navigation View Closed</string>
 </resources>

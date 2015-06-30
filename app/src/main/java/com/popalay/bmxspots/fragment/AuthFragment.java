@@ -29,29 +29,27 @@ import java.util.List;
 public class AuthFragment extends Fragment implements SocialNetworkManager.OnInitializationCompleteListener,
         OnLoginCompleteListener, OnRequestSocialPersonCompleteListener {
 
-    public interface SocialFragmentListener {
+    public interface AuthFragmentListener {
         void loggedInSocialNetwork(int networkID);
     }
 
     public static final String TAG = "AuthFragment";
 
-    private SocialFragmentListener socialFragmentListener;
+    private AuthFragmentListener authFragmentListener;
 
     public AuthFragment() {
     }
 
-    @Override
-    public void onAttach(Activity activity) {
+    @Override public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            socialFragmentListener = (SocialFragmentListener) activity;
+            authFragmentListener = (AuthFragmentListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString() + " must implement onSomeEventListener");
         }
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    @Override public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_auth, container, false);
         // init buttons and set Listener
         Button vk = (Button) rootView.findViewById(R.id.vk);
@@ -107,8 +105,7 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
         }
     }
 
-    @Override
-    public void onSocialNetworkManagerInitialized() {
+    @Override public void onSocialNetworkManagerInitialized() {
         //when init SocialNetworks - get and setup login only for initialized SocialNetworks
         for (SocialNetwork socialNetwork : MainActivity.mSocialNetworkManager.getInitializedSocialNetworks()) {
             socialNetwork.setOnLoginCompleteListener(this);
@@ -140,8 +137,7 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
         }
     };
 
-    @Override
-    public void onLoginSuccess(int networkId) {
+    @Override public void onLoginSuccess(int networkId) {
         MainActivity.hideProgress();
         Toast.makeText(getActivity(), "Login Success", Toast.LENGTH_LONG).show();
         MainActivity.showProgress("Register in app");
@@ -150,27 +146,25 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
         socialNetwork.requestCurrentPerson();
     }
 
-    @Override
-    public void onError(int networkId, String requestID, String errorMessage, Object data) {
+    @Override public void onError(int networkId, String requestID, String errorMessage, Object data) {
         MainActivity.hideProgress();
         Toast.makeText(getActivity(), "ERROR: " + errorMessage, Toast.LENGTH_LONG).show();
     }
 
-    @Override
-    public void onRequestSocialPersonSuccess(int i, SocialPerson socialPerson) {
+    @Override public void onRequestSocialPersonSuccess(int i, SocialPerson socialPerson) {
         MainActivity.hideProgress();
-        registerOrLoginUser(i, socialPerson.id, socialPerson.name, socialPerson.avatarURL);
+        registerOrLoginUser(i, socialPerson.id, socialPerson.name, socialPerson.avatarURL, socialPerson.profileURL);
 
     }
 
-    private void registerOrLoginUser(final int networkID, final String id, final String name, String avatar) {
-
+    private void registerOrLoginUser(final int networkID, final String id, final String name, final String avatar, final String link) {
         ParseUser newUser = new ParseUser();
         newUser.setUsername(name);
         newUser.setPassword(id);
 
         // other fields can be set just like with ParseObject
         newUser.put("avatar", avatar);
+        newUser.put("link", link);
         if (newUser.isNew()) {
             newUser.signUpInBackground(new SignUpCallback() {
                 public void done(ParseException e) {
@@ -188,13 +182,13 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
         }
     }
 
-    private void signIn(final int networkID, String name, String password) {
+    private void signIn(final int networkID, final String name, final String password) {
         ParseUser.logInInBackground(name, password, new LogInCallback() {
             public void done(ParseUser user, ParseException e) {
                 if (user != null) {
                     logged(networkID);
                 } else {
-                    // Signup failed. Look at the ParseException to see what happened.
+                    // Sign up failed. Look at the ParseException to see what happened.
                     Log.d(TAG, e.getMessage() );
                 }
             }
@@ -203,6 +197,6 @@ public class AuthFragment extends Fragment implements SocialNetworkManager.OnIni
 
     private void logged(int networkID) {
         Log.d("networkID", "inLogin: " + networkID);
-        socialFragmentListener.loggedInSocialNetwork(networkID);
+        authFragmentListener.loggedInSocialNetwork(networkID);
     }
 }

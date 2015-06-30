@@ -3,10 +3,13 @@
     <color name="colorPrimary">#4daf7d</color>
     <color name="colorPrimaryDark">#4aa172</color>
     <color name="colorAccent">#FF5252</color>
-    <color name="mainBackground">#e0e0e0</color>
-    <color name="colorText">#FFFF</color>
+    <color name="textColorPrimary">#ffffff</color>
 
+    <color name="mainBackground">#e0e0e0</color>
     <color name="authBackground">#4aa172</color>
+
+    <color name="textColorNavigation">#727272</color>
+
 
     <color name="vk_light">#30649f</color>
     <color name="vk_dark">#2b5a8f</color>

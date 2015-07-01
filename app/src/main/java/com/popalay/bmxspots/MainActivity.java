@@ -20,7 +20,7 @@ import com.parse.Parse;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.popalay.bmxspots.fragment.AuthFragment;
-import com.popalay.bmxspots.fragment.MainFragment;
+import com.popalay.bmxspots.fragment.mainfragment.MainFragment;
 import com.squareup.picasso.Picasso;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -45,7 +45,6 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
-//            initToolbar();
             initNavigationDrawer();
             authFragment = new AuthFragment();
             context = this;
@@ -53,19 +52,6 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
             //testParse();
             toLogin();
         }
-    }
-
-    private void initToolbar() {
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //toolbar.setTitle(R.string.app_name);
-        setSupportActionBar(toolbar);
-        /*toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override public boolean onMenuItemClick(MenuItem item) {
-                return false;
-            }
-        });
-
-        toolbar.inflateMenu(R.menu.toolbar);*/
     }
 
     private void initNavigationDrawer() {
@@ -96,6 +82,11 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
 
             switch ((menuItem.getItemId())) {
                 case R.id.home:
+                    if(getSupportFragmentManager().findFragmentByTag(MainFragment.TAG) == null) {
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.container, new MainFragment(), MainFragment.TAG)
+                                .commit();
+                    }
                     return true;
                 case R.id.my:
                     return true;

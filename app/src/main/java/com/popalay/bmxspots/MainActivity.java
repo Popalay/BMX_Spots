@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
             drawerLayout.closeDrawers();
 
             switch ((menuItem.getItemId())) {
-                case R.id.home:
+                case R.id.main:
                     if(getSupportFragmentManager().findFragmentByTag(MainFragment.TAG) == null) {
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.container, new MainFragment(), MainFragment.TAG)

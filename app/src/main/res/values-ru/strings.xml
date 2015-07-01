@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BMX Spots</string>
+    <string name="action_settings">Настройки</string>
+    <string name="favorite_string">Любимые места </string>
+    <string name="gp_btn_text">Войти с помощью Google+</string>
+    <string name="main_string">Главная</string>
+    <string name="information_string">Информация</string>
+    <string name="logout_string">Выйти</string>
+    <string name="my_string">Мои места</string>
+    <string name="search_title">Поиск</string>
+    <string name="vk_btn_text">Войти с помощью Вконтакте</string>
+</resources>

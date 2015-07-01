@@ -4,10 +4,10 @@
     <group android:checkableBehavior="single">
 
         <item
-            android:id="@+id/home"
+            android:id="@+id/main"
             android:checked="false"
-            android:icon="@drawable/home"
-            android:title="@string/home_string" />
+            android:icon="@drawable/main"
+            android:title="@string/main_string" />
         <item
             android:id="@+id/my"
             android:checked="false"

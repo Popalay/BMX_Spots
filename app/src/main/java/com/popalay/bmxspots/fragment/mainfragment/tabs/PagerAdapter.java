@@ -18,11 +18,9 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
 
         switch (position) {
             case 0:
-                MapFragment mapFragment = new MapFragment();
-                return mapFragment;
+                return new MapFragment();
             case 1:
-                SurroundingFragment surroundingFragment = new SurroundingFragment();
-                return surroundingFragment;
+                return new SurroundingFragment();
             default:
                 return null;
         }

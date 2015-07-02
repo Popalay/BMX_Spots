@@ -24,7 +24,8 @@ public class MainFragment extends Fragment {
     public MainFragment() {
     }
 
-    @Override public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
         initToolbar();
         initTabs();
@@ -36,7 +37,8 @@ public class MainFragment extends Fragment {
         toolbar.setTitle("MainFragment");
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override public boolean onMenuItemClick(MenuItem item) {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
                 return false;
             }
         });

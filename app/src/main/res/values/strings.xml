@@ -17,4 +17,6 @@
 
     <string name="closeDrawer" translatable="false">Navigation View</string>
     <string name="openDrawer" translatable="false">Navigation View Closed</string>
+    <string name="tab_map">Map</string>
+    <string name="tab_surrounding">Surrounding</string>
 </resources>

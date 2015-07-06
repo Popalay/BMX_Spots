@@ -17,6 +17,14 @@
 
     <string name="closeDrawer" translatable="false">Navigation View</string>
     <string name="openDrawer" translatable="false">Navigation View Closed</string>
+
     <string name="tab_map">Map</string>
     <string name="tab_surrounding">Surrounding</string>
+
+    <string name="spot_title">Title</string>
+    <string name="spot_description">Description</string>
+    <string name="spot_address">Address</string>
+    <string name="dialog_spot_add_title">Add spot</string>
+    <string name="button_add">Add</string>
+    <string name="button_cancel">Cancel</string>
 </resources>

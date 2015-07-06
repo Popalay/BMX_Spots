@@ -4,6 +4,7 @@
     <color name="colorPrimaryDark">#4aa172</color>
     <color name="colorAccent">#FF5252</color>
     <color name="textColorPrimary">#ffffff</color>
+    <color name="textColorSecondary">#C8E6C9</color>
 
     <color name="mainBackground">#e0e0e0</color>
     <color name="authBackground">#4aa172</color>

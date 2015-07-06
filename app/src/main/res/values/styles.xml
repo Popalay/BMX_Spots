@@ -2,11 +2,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
 
-    <style name="Base.Theme.BmxSpots" parent="Theme.AppCompat.NoActionBar">
+    <style name="Base.Theme.BmxSpots" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:textColorPrimary">@color/textColorPrimary</item>
+        <item name="android:textColorSecondary">@color/textColorSecondary</item>
         <item name="android:windowBackground">@color/background_material_light</item>
     </style>
 
@@ -35,6 +36,10 @@
         <item name="android:layout_margin">@dimen/btn_flat_margin</item>
         <item name="android:drawablePadding">@dimen/btn_flat_drawable_padding</item>
         <item name="android:elevation" tools:targetApi="lollipop">@dimen/elevation_social_btn</item>
+    </style>
+
+    <style name="DialogButton" parent="Base.Widget.AppCompat.Button.ButtonBar.AlertDialog">
+
     </style>
 
 </resources>

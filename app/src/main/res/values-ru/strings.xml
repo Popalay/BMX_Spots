@@ -12,4 +12,10 @@
     <string name="vk_btn_text">Войти с помощью Вконтакте</string>
     <string name="tab_surrounding">Ближайшие</string>
     <string name="tab_map">Карта</string>
+    <string name="spot_description">Описание</string>
+    <string name="spot_title">Название</string>
+    <string name="dialog_spot_add_title">Добавить место</string>
+    <string name="button_add">Добавить</string>
+    <string name="button_cancel">Отмена</string>
+    <string name="spot_address">Адресс</string>
 </resources>

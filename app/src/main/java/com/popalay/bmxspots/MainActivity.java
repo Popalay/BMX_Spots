@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -39,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
 
+    private Repo repo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,8 +51,8 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
             initNavigationDrawer();
             authFragment = new AuthFragment();
             context = this;
-            initParse();
-            //testParse();
+            repo = new Repo();
+            repo.load();
             toLogin();
         }
     }
@@ -113,18 +116,6 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
         }
     };
 
-    private void initParse() {
-        // Enable Local Datastore.
-        Parse.enableLocalDatastore(this);
-        Parse.initialize(this, "OTgGHGUpjgTFTxAlxzwg85bdJ8Fx3cEGvRNKwNQt", "kJ0iOKH94wvE4nHut0rF5WFcZOOX8H1uQwFkfkvW");
-    }
-
-    /*private void testParse() {
-        ParseObject testObject = new ParseObject("TestObject");
-        testObject.put("foo", "ddd");
-        testObject.saveInBackground();
-    }*/
-
     private void toLogin() {
         if (getSupportFragmentManager().findFragmentByTag(AuthFragment.TAG) == null) {
             getSupportFragmentManager().beginTransaction()
@@ -168,15 +159,15 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
     }
 
     private void updateUserInfo() {
-        ParseUser currentUser = ParseUser.getCurrentUser();
-        if (currentUser != null) {
+        repo.setUser();
+        if (repo.getUser() != null) {
             TextView username = (TextView) findViewById(R.id.username);
-            username.setText(ParseUser.getCurrentUser().getUsername());
+            username.setText(repo.getUser().getUsername());
             TextView link = (TextView) findViewById(R.id.link);
-            link.setText(ParseUser.getCurrentUser().get("link").toString());
+            link.setText(repo.getUser().get("link").toString());
             CircleImageView avatar = (CircleImageView) findViewById(R.id.avatar);
             Picasso.with(context)
-                    .load(currentUser.get("avatar").toString())
+                    .load(repo.getUser().get("avatar").toString())
                     .placeholder(R.drawable.user_placeholder)
                     .into(avatar);
         } else {
@@ -193,4 +184,10 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
                     .commit();
         }
     }
+
+    public Repo getRepo() {
+        return repo;
+    }
+
+
 }

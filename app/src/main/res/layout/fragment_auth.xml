@@ -1,43 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/coord"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+
+<LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/authBackground"
-    android:gravity="center" >
+    android:gravity="center"
+    android:orientation="vertical">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp" >
+        android:layout_marginTop="50dp"
+        android:orientation="vertical">
 
         <TextView
+            android:id="@+id/auth_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:text="@string/app_name"
-            android:id="@+id/auth_text"
-            android:textSize="@dimen/text_auth"
-            android:gravity="center" />
+            android:textSize="@dimen/text_auth" />
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center">
+        android:layout_height="match_parent" >
 
-        <Button style="@style/SocialButton"
-            android:text="@string/vk_btn_text"
-            android:id="@+id/vk"
-            android:background="@drawable/vk_social_button"
-            android:drawableStart="@drawable/vk" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="4"/>
 
-        <Button style="@style/SocialButton"
-            android:text="@string/gp_btn_text"
-            android:id="@+id/gp"
-            android:background="@drawable/gp_social_button"
-            android:drawableStart="@drawable/gp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/vk"
+                style="@style/SocialButton"
+                android:background="@drawable/vk_social_button"
+                android:drawableStart="@drawable/vk"
+                android:text="@string/vk_btn_text" />
+
+            <Button
+                android:id="@+id/gp"
+                style="@style/SocialButton"
+                android:background="@drawable/gp_social_button"
+                android:drawableStart="@drawable/gp"
+                android:text="@string/gp_btn_text" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="4"/>
+
     </LinearLayout>
 
 </LinearLayout>
+
+</android.support.design.widget.CoordinatorLayout>

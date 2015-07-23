@@ -6,12 +6,12 @@
 
     <string name="vk_app_id" translatable="false">4964885</string>
 
-    <string name="vk_btn_text">Sign in with Vkontakte</string>
-    <string name="gp_btn_text">Sign in with Google+</string>
+    <string name="vk_btn_text">With Vkontakte</string>
+    <string name="gp_btn_text">With Google+</string>
 
     <string name="main_string">Main</string>
-    <string name="my_string">My spots</string>
-    <string name="favorite_string">Favorite spots</string>
+    <string name="my_string">My spotsFavorite</string>
+    <string name="favorite_string">Favorite spotsFavorite</string>
     <string name="information_string">Information</string>
     <string name="logout_string">Logout</string>
 
@@ -27,4 +27,5 @@
     <string name="dialog_spot_add_title">Add spot</string>
     <string name="button_add">Add</string>
     <string name="button_cancel">Cancel</string>
+    <string name="refresh_title">Refresh</string>
 </resources>

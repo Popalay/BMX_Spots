@@ -1,59 +1,115 @@
 package com.popalay.bmxspots;
 
-import com.parse.FindCallback;
-import com.parse.GetCallback;
-import com.parse.ParseException;
+import android.text.TextUtils;
+import android.util.Log;
+
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Stream;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.popalay.bmxspots.model.Spot;
+import com.popalay.bmxspots.models.Spot;
 
 import java.util.ArrayList;
 import java.util.List;
 
-//TODO
-public class Repo {
-    private ArrayList<Spot> allSpots;
-    private ArrayList<Spot> mySpots;
-    private ArrayList<Spot> favoriteSpots;
+public class Repo {//TODO синхронизация загрузки даных
+
+    public interface OnLoadAllSpots {
+        void onLoadAllSpots();
+    }
+
+    private List<Spot> allSpots;
+    private List<Spot> mySpots;
+    private List<Spot> favoriteSpots;
+    private List<Spot> surroundingSpots;
     private ParseUser user;
 
+    private List<OnLoadAllSpots> listeners;
+
+    public void addOnRefreshAllSpotsListeners(OnLoadAllSpots listener) {
+        this.listeners.add(listener);
+    }
+
     public Repo() {
+        this.listeners = new ArrayList<>();
         this.allSpots = new ArrayList<>();
         this.mySpots = new ArrayList<>();
         this.favoriteSpots = new ArrayList<>();
+        this.surroundingSpots = new ArrayList<>();
         this.setUser();
     }
 
     public boolean load() {
         loadAllSpots();
-        loadMySpots();
-        loadFavoriteSpots();
         return true;
     }
 
-    public void loadAllSpots() {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Spot");
-        query.findInBackground(new FindCallback<ParseObject>() {
-            public void done(List<ParseObject> spots, ParseException e) {
+    public List<Spot> loadAllSpots() {
+        ParseQuery<ParseObject> query = new ParseQuery<>("Spot");
+        query.findInBackground((spots, e) -> {
+            if (e == null) {
+                // your logic here
+                allSpots.clear();
+                allSpots.addAll(Stream.of(spots).map(Spot::new).collect(Collectors.<Spot>toList()));
+                loadMySpots();
+                loadFavoriteSpots();
+                loadSurroundingSpots();
+            } else {
+                // handle Parse Exception here
+                Log.d("Repo", "loadAllSpots:" + e.getMessage());
+            }
+        });
+        return allSpots;
+    }
+
+    public List<Spot> loadMySpots() {
+            Stream.of(allSpots)
+                    .filter(spot -> TextUtils.equals(spot.getAuthorID(), user.getObjectId()))
+                    .forEach(spot -> spot.setIsMy(true));
+            mySpots.clear();
+            mySpots.addAll(Stream.of(allSpots)
+                    .filter(Spot::isMy)
+                    .collect(Collectors.<Spot>toList()));
+        return mySpots;
+    }
+
+    public List<Spot> loadFavoriteSpots() {
+            List<String> spotIDs = new ArrayList<>();
+            ParseQuery<ParseObject> query = new ParseQuery<>("Favorite");
+            query.findInBackground((favorites, e) -> {
                 if (e == null) {
                     // your logic here
-                    for (ParseObject spot : spots) {
-                        allSpots.add(new Spot(spot));
+                    Stream.of(favorites)
+                            .filter(favorite -> TextUtils.equals(favorite.getString("userID"), user.getObjectId()))
+                            .forEach(favorite -> spotIDs.add(favorite.getString("spotID")));
+                    Stream.of(spotIDs).forEach(id -> Log.d("Repo", id));
+                    if (spotIDs.size() > 0) {
+                        Stream.of(allSpots)
+                                .filter(spot -> spotIDs.contains(spot.getID()))
+                                .forEach(spot -> spot.setIsFavorite(true));
+                        favoriteSpots.clear();
+                        favoriteSpots.addAll(Stream.of(allSpots)
+                                .filter(Spot::isFavorite)
+                                .collect(Collectors.<Spot>toList()));
                     }
                 } else {
                     // handle Parse Exception here
+                    Log.d("Repo", "loadFavoriteSpots:" + e.getMessage());
                 }
-            }
-        });
+                Stream.of(listeners).forEach(OnLoadAllSpots::onLoadAllSpots);
+                Stream.of(allSpots).forEach(spot -> Log.d("Repo", spot.getTitle() + ": IsMy - " + spot.isMy()
+                        + ", isFavorite - " + spot.isFavorite()));
+            });
+        return favoriteSpots;
     }
 
-    public void loadMySpots() {
-
-    }
-
-    public void loadFavoriteSpots() {
-
+    public List<Spot> loadSurroundingSpots() {
+        surroundingSpots.clear();
+        surroundingSpots.addAll(Stream.of(allSpots)
+                .filter(spot -> spot.getDistance() <= 5)
+                .collect(Collectors.<Spot>toList()));
+        return surroundingSpots;
     }
 
     public void addSpot(Spot spot) {
@@ -61,24 +117,20 @@ public class Repo {
         mySpots.add(spot);
     }
 
-    public void addFavoriteSpot(Spot spot) {
-        favoriteSpots.add(spot);
-    }
-
-    public void synhSpots() {
-
-    }
-
-    public ArrayList<Spot> getFavoriteSpots() {
+    public List<Spot> getFavoriteSpots() {
         return favoriteSpots;
     }
 
-    public ArrayList<Spot> getMySpots() {
+    public List<Spot> getMySpots() {
         return mySpots;
     }
 
-    public ArrayList<Spot> getAllSpots() {
+    public List<Spot> getAllSpots() {
         return allSpots;
+    }
+
+    public List<Spot> getSurroundingSpots() {
+        return surroundingSpots;
     }
 
     public ParseUser getUser() {
@@ -87,5 +139,9 @@ public class Repo {
 
     public void setUser() {
         this.user = ParseUser.getCurrentUser();
+    }
+
+    public void clearMySpots() {
+        this.mySpots.clear();
     }
 }

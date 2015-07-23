@@ -5,7 +5,7 @@
 
         <item
             android:id="@+id/main"
-            android:checked="false"
+            android:checked="true"
             android:icon="@drawable/main"
             android:title="@string/main_string" />
         <item
@@ -18,20 +18,18 @@
             android:checked="false"
             android:icon="@drawable/favorite"
             android:title="@string/favorite_string" />
-        <item android:title="">
-            <menu>
-                <item
-                    android:id="@+id/information"
-                    android:checked="false"
-                    android:icon="@drawable/information"
-                    android:title="@string/information_string" />
-                <item
-                    android:id="@+id/logout"
-                    android:checked="false"
-                    android:icon="@drawable/logout"
-                    android:title="@string/logout_string" />
-            </menu>
-        </item>
+
+        <item
+            android:id="@+id/information"
+            android:checked="false"
+            android:icon="@drawable/information"
+            android:title="@string/information_string" />
+        <item
+            android:id="@+id/logout"
+            android:checked="false"
+            android:icon="@drawable/logout"
+            android:title="@string/logout_string" />
 
     </group>
+
 </menu>

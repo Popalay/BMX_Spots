@@ -84,11 +84,11 @@ public class Repo {//TODO синхронизация загрузки даных
                             .filter(favorite -> TextUtils.equals(favorite.getString("userID"), user.getObjectId()))
                             .forEach(favorite -> spotIDs.add(favorite.getString("spotID")));
                     Stream.of(spotIDs).forEach(id -> Log.d("Repo", id));
+                    favoriteSpots.clear();
                     if (spotIDs.size() > 0) {
                         Stream.of(allSpots)
                                 .filter(spot -> spotIDs.contains(spot.getID()))
                                 .forEach(spot -> spot.setIsFavorite(true));
-                        favoriteSpots.clear();
                         favoriteSpots.addAll(Stream.of(allSpots)
                                 .filter(Spot::isFavorite)
                                 .collect(Collectors.<Spot>toList()));

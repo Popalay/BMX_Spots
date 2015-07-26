@@ -17,7 +17,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.annimon.stream.Stream;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -39,28 +41,58 @@ import java.util.List;
 import java.util.Locale;
 
 public class MapFragment extends Fragment implements GoogleMap.OnMapClickListener,
-        GoogleMap.OnMapLongClickListener, GoogleMap.OnMapLoadedCallback, Repo.OnLoadAllSpots {
+        GoogleMap.OnMapLongClickListener, GoogleMap.OnMapLoadedCallback, GoogleMap.OnMarkerClickListener, Repo.OnLoadAllSpots {
 
     public static final String TAG = "MapFragment";
 
+    private View rootView;
     private CoordinatorLayout coordinatorLayout;
+    private View slidingUpPanelLayout;
+    private FloatingActionButton fab;
 
     private MapView mMapView;
     private GoogleMap mMap;
 
     private Marker newMarker;
+    private Spot selectedSpot;
+
+    private boolean slidingPanelExpand;
+
+    protected TextView spotTitle;
+    protected TextView spotAuthor;
+    protected TextView spotDistance;
+    protected TextView spotDescription;
+
+    //private Button toMap;
+    protected Button btnFavorite;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_map, container, false);
+        this.rootView = inflater.inflate(R.layout.fragment_map, container, false);
         ((MainActivity) getActivity()).getRepo().addOnRefreshAllSpotsListeners(this);
-        coordinatorLayout = (CoordinatorLayout) rootView.findViewById(R.id.coord);
-        FloatingActionButton fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
-        fab.setOnClickListener(fabClick);
-
-        mMapView = (MapView) rootView.findViewById(R.id.mapView);
-        mMapView.onCreate(savedInstanceState);
-        mMapView.onResume();// needed to get the map to display immediately
+        this.coordinatorLayout = (CoordinatorLayout) rootView.findViewById(R.id.coord);
+        this.slidingUpPanelLayout = rootView.findViewById(R.id.sliding_layout);
+        this.fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        this.fab.setOnClickListener(fabClick);
+        this.spotTitle = (TextView) rootView.findViewById(R.id.spot_title);
+        this.spotAuthor = (TextView) rootView.findViewById(R.id.spot_author);
+        this.spotDistance = (TextView) rootView.findViewById(R.id.spot_distance);
+        this.spotDescription = (TextView) rootView.findViewById(R.id.spot_description);
+        this.btnFavorite = (Button) rootView.findViewById(R.id.card_btn_favorite);
+        this.btnFavorite.setOnClickListener(v -> {
+            if (selectedSpot != null) {
+                if (selectedSpot.isFavorite()) {
+                    selectedSpot.intoFavorite();
+                    btnFavorite.setText("To favorite");
+                } else {
+                    selectedSpot.toFavorite();
+                    btnFavorite.setText("Into favorite");
+                }
+            }
+        });
+        this.mMapView = (MapView) rootView.findViewById(R.id.mapView);
+        this.mMapView.onCreate(savedInstanceState);
+        this.mMapView.onResume();// needed to get the map to display immediately
         return rootView;
     }
 
@@ -75,26 +107,11 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
         setUpMapIfNeeded();
     }
 
-/*    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.toolbar_map, menu);
-        ImageView refresh = (ImageView) menu.findItem(R.id.refresh).getActionView();
-        if (refresh != null) {
-            refresh.setImageResource(R.drawable.refresh);
-            refresh.setOnClickListener(v -> {
-                v.animate().rotationBy(360).setInterpolator(new DecelerateInterpolator(0.5f)).start();
-                // create and use new data set
-                Log.d(this.toString(), "refresh clicked");
-                ((MainActivity) getActivity()).getRepo().loadAllSpots();
-            });
-        }
-        super.onCreateOptionsMenu(menu, inflater);
-    }*/
-
     @Override
     public void onMapLoaded() {
         mMap.setOnMapClickListener(this);
         mMap.setOnMapLongClickListener(this);
+        mMap.setOnMarkerClickListener(this);
 
         Location location = MainActivity.getCurrentLocation();
         if (location != null) {
@@ -132,6 +149,10 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
             newMarker.remove();
             newMarker = null;
         }
+        if (slidingPanelExpand) {
+            narrowSlidingPanel();
+            selectedSpot = null;
+        }
     }
 
     @Override
@@ -139,10 +160,60 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
         if (newMarker != null) {
             newMarker.remove();
             newMarker = null;
+            selectedSpot = null;
         }
         newMarker = mMap.addMarker(new MarkerOptions()
                 .position(latLng)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE)));
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        if (slidingPanelExpand) {
+            showSpotInformation(marker);
+            marker.showInfoWindow();
+        } else {
+            showSpotInformation(marker);
+            marker.showInfoWindow();
+            expandSlidingPanel();
+        }
+        return true;
+    }
+
+    private void showSpotInformation(Marker marker) {
+        selectedSpot = Stream.of(((MainActivity) getActivity()).getRepo().getAllSpots())
+                .filter(spot -> spot.getMarker().equals(marker))
+                .findFirst().get();
+        if (selectedSpot != null) {
+            spotTitle.setText(selectedSpot.getTitle());
+            spotAuthor.setText(selectedSpot.getAuthor());
+            spotDistance.setText(selectedSpot.getDistance() + "km");
+            spotDescription.setText(selectedSpot.getDescription());
+            if (selectedSpot.isFavorite())
+                btnFavorite.setText("Into favorite");
+        }
+    }
+
+    private void expandSlidingPanel() {
+        if (slidingUpPanelLayout.getVisibility() == View.GONE)
+            slidingUpPanelLayout.setVisibility(View.VISIBLE);
+        slidingPanelExpand = true;
+        slidingUpPanelLayout.animate().translationY(0)
+                .setInterpolator(new AccelerateInterpolator()).start();
+        fabMove(-slidingUpPanelLayout.getHeight());
+    }
+
+    private void narrowSlidingPanel() {
+        Log.d(TAG, "narrowSlidingPanel");
+        slidingPanelExpand = false;
+        slidingUpPanelLayout.animate().translationY(slidingUpPanelLayout.getHeight())
+                .setInterpolator(new AccelerateInterpolator()).start();
+        fabMove(0);
+    }
+
+    private void fabMove(float value) {
+        fab.animate().translationY(value)
+                .setInterpolator(new AccelerateInterpolator()).start();
     }
 
     private FloatingActionButton.OnClickListener fabClick = new FloatingActionButton.OnClickListener() {
@@ -229,6 +300,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
     private void addMarker(Spot spot) {
         spot.setMarker(mMap.addMarker(new MarkerOptions()
                 .position(spot.getPosition())
+                .title(spot.getTitle())
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE))));
     }
 
@@ -236,6 +308,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
     public void onResume() {
         super.onResume();
         mMapView.onResume();
+        updateMarkers();
     }
 
     @Override

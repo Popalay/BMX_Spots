@@ -53,7 +53,9 @@ public class FavoriteFragment extends Fragment implements Repo.OnLoadAllSpots {
 
     @Override
     public void onLoadAllSpots() {
-        adapter.updateList(((MainActivity) getActivity()).getRepo().getFavoriteSpots());
-        Log.d(TAG, "onLoadAllSpots");
+        if(getActivity() != null) {
+            adapter.updateList(((MainActivity) getActivity()).getRepo().getFavoriteSpots());
+            Log.d(TAG, "onLoadAllSpots");
+        }
     }
 }

@@ -21,6 +21,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.annimon.stream.Optional;
 import com.annimon.stream.Stream;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -41,7 +42,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class MapFragment extends Fragment implements GoogleMap.OnMapClickListener,
-        GoogleMap.OnMapLongClickListener, GoogleMap.OnMapLoadedCallback, GoogleMap.OnMarkerClickListener, Repo.OnLoadAllSpots {
+        GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener, Repo.OnLoadAllSpots {
 
     public static final String TAG = "MapFragment";
 
@@ -105,14 +106,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
             e.printStackTrace();
         }
         setUpMapIfNeeded();
-    }
-
-    @Override
-    public void onMapLoaded() {
-        mMap.setOnMapClickListener(this);
-        mMap.setOnMapLongClickListener(this);
-        mMap.setOnMarkerClickListener(this);
-
+        // Restoring the markers on configuration changes
         Location location = MainActivity.getCurrentLocation();
         if (location != null) {
             LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
@@ -138,9 +132,12 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
             mMap = mMapView.getMap();
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
-                mMap.setOnMapLoadedCallback(this);
+                mMap.setOnMapClickListener(this);
+                mMap.setOnMapLongClickListener(this);
+                mMap.setOnMarkerClickListener(this);
             }
         }
+        updateMarkers();
     }
 
     @Override
@@ -170,28 +167,37 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
     @Override
     public boolean onMarkerClick(Marker marker) {
         if (slidingPanelExpand) {
-            showSpotInformation(marker);
-            marker.showInfoWindow();
+            if (showSpotInformation(marker)) {
+                marker.showInfoWindow();
+            } else {
+                narrowSlidingPanel();
+            }
         } else {
-            showSpotInformation(marker);
-            marker.showInfoWindow();
-            expandSlidingPanel();
+            if (showSpotInformation(marker)) {
+                marker.showInfoWindow();
+                expandSlidingPanel();
+            }
         }
         return true;
     }
 
-    private void showSpotInformation(Marker marker) {
-        selectedSpot = Stream.of(((MainActivity) getActivity()).getRepo().getAllSpots())
+    private boolean showSpotInformation(Marker marker) {
+        Optional<Spot> spotOptional = Stream.of(((MainActivity) getActivity()).getRepo().getAllSpots())
                 .filter(spot -> spot.getMarker().equals(marker))
-                .findFirst().get();
-        if (selectedSpot != null) {
-            spotTitle.setText(selectedSpot.getTitle());
-            spotAuthor.setText(selectedSpot.getAuthor());
-            spotDistance.setText(selectedSpot.getDistance() + "km");
-            spotDescription.setText(selectedSpot.getDescription());
-            if (selectedSpot.isFavorite())
-                btnFavorite.setText("Into favorite");
+                .findFirst();
+        if (spotOptional.isPresent()) {
+            selectedSpot = spotOptional.get();
+            if (selectedSpot != null) {
+                spotTitle.setText(selectedSpot.getTitle());
+                spotAuthor.setText(selectedSpot.getAuthor());
+                spotDistance.setText(selectedSpot.getDistance() + "km");
+                spotDescription.setText(selectedSpot.getDescription());
+                if (selectedSpot.isFavorite())
+                    btnFavorite.setText("Into favorite");
+                return true;
+            }
         }
+        return false;
     }
 
     private void expandSlidingPanel() {
@@ -306,19 +312,21 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
 
     @Override
     public void onResume() {
+        Log.d(TAG, "onResume");
         super.onResume();
         mMapView.onResume();
-        updateMarkers();
     }
 
     @Override
     public void onPause() {
+        Log.d(TAG, "onPause");
         super.onPause();
         mMapView.onPause();
     }
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy");
         super.onDestroy();
         mMapView.onDestroy();
     }

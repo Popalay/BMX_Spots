@@ -32,6 +32,7 @@ import com.popalay.bmxspots.Repo;
 import com.popalay.bmxspots.fragmets.AuthFragment;
 import com.popalay.bmxspots.fragmets.FavoriteFragment;
 import com.popalay.bmxspots.fragmets.MainFragment;
+import com.popalay.bmxspots.fragmets.MyFragment;
 import com.squareup.picasso.Picasso;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -122,17 +123,26 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
             switch ((menuItem.getItemId())) {
                 case R.id.main:
                     if (getSupportFragmentManager().findFragmentByTag(MainFragment.TAG) == null) {
-                        getSupportActionBar().setSubtitle(getResources().getString(R.string.main_string));
+                        if (getSupportActionBar() != null)
+                            getSupportActionBar().setSubtitle(getResources().getString(R.string.main_string));
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.container, new MainFragment(), MainFragment.TAG)
                                 .commit();
                     }
                     return true;
                 case R.id.my:
+                    if (getSupportFragmentManager().findFragmentByTag(MyFragment.TAG) == null) {
+                        if (getSupportActionBar() != null)
+                            getSupportActionBar().setSubtitle(getResources().getString(R.string.my_string));
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.container, new MyFragment(), MyFragment.TAG)
+                                .commit();
+                    }
                     return true;
                 case R.id.favorite:
                     if (getSupportFragmentManager().findFragmentByTag(FavoriteFragment.TAG) == null) {
-                        getSupportActionBar().setSubtitle(getResources().getString(R.string.favorite_string));
+                        if (getSupportActionBar() != null)
+                            getSupportActionBar().setSubtitle(getResources().getString(R.string.favorite_string));
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.container, new FavoriteFragment(), FavoriteFragment.TAG)
                                 .commit();

@@ -25,7 +25,7 @@ public class FavoriteFragment extends Fragment implements Repo.OnLoadAllSpots {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.fragment_favorite, container, false);
+        rootView = inflater.inflate(R.layout.fragment_recyclerview, container, false);
         ((MainActivity) getActivity()).getRepo().addOnRefreshAllSpotsListeners(this);
         RecyclerView rv = (RecyclerView) rootView.findViewById(R.id.rv);
         rv.setItemAnimator(new DefaultItemAnimator());

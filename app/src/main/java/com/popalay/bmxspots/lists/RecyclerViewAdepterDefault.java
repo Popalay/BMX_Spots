@@ -1,3 +1,4 @@
+/*
 package com.popalay.bmxspots.lists;
 
 import android.support.v7.widget.RecyclerView;
@@ -169,3 +170,4 @@ public class RecyclerViewAdepterDefault extends RecyclerView.Adapter<RecyclerVie
         notifyDataSetChanged();
     }
 }
+*/

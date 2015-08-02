@@ -18,7 +18,7 @@ import com.github.gorbin.asne.core.persons.SocialPerson;
 import com.github.gorbin.asne.vk.VkSocialNetwork;
 import com.parse.ParseUser;
 import com.popalay.bmxspots.R;
-import com.popalay.bmxspots.activities.MainActivity;
+import com.popalay.bmxspots.MainActivity;
 import com.vk.sdk.VKScope;
 
 import java.util.List;

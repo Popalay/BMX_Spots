@@ -1,3 +1,4 @@
+/*
 package com.popalay.bmxspots.lists;
 
 import android.support.v7.widget.RecyclerView;
@@ -143,8 +144,8 @@ public class RecyclerViewAdepterFavorite extends RecyclerView.Adapter<RecyclerVi
             });
         }
         holder.spotTitle.setText(spotsFavorite.get(position).getTitle());
-        holder.spotAuthor.setText(spotsFavorite.get(position).getAuthor());
-        holder.spotDistance.setText(spotsFavorite.get(position).getDistance() + "km");
+        holder.spotAuthor.setText(spotsFavorite.get(position).getAuthor().getUserName());
+        holder.spotDistance.setText(spotsFavorite.get(position).getDistanceTo() + "km");
         holder.spotDescription.setText(spotsFavorite.get(position).getDescription());
     }
 
@@ -173,3 +174,4 @@ public class RecyclerViewAdepterFavorite extends RecyclerView.Adapter<RecyclerVi
         notifyItemRemoved(position);
     }
 }
+*/

@@ -65,29 +65,6 @@
                 android:layout_height="wrap_content"
                 android:text="To favorite" />
 
-            <!--<ImageButton
-                android:id="@+id/favorite_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@null"
-                android:src="@drawable/favorite_btn" />
-
-            <ImageButton
-                android:id="@+id/share_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:background="@null"
-                android:src="@drawable/share_btn" />
-
-            <ImageButton
-                android:id="@+id/route_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:background="@null"
-                android:src="@drawable/route_btn" />-->
-
         </LinearLayout>
 
     </LinearLayout>

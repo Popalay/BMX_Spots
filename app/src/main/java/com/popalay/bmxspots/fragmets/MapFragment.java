@@ -3,8 +3,8 @@ package com.popalay.bmxspots.fragmets;
 import android.app.Dialog;
 import android.location.Address;
 import android.location.Geocoder;
-import android.location.Location;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -21,7 +21,6 @@ import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.annimon.stream.Optional;
 import com.annimon.stream.Stream;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -32,17 +31,21 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.parse.ParseGeoPoint;
+import com.parse.ParseQuery;
+import com.parse.ParseUser;
+import com.popalay.bmxspots.MainActivity;
 import com.popalay.bmxspots.R;
 import com.popalay.bmxspots.Repo;
-import com.popalay.bmxspots.activities.MainActivity;
 import com.popalay.bmxspots.models.Spot;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
 public class MapFragment extends Fragment implements GoogleMap.OnMapClickListener,
-        GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener, Repo.OnLoadAllSpots {
+        GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener {
 
     public static final String TAG = "MapFragment";
 
@@ -56,6 +59,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
 
     private Marker newMarker;
     private Spot selectedSpot;
+    private HashMap<Marker, String> hashMapMarkers = new HashMap<>();
 
     private boolean slidingPanelExpand;
 
@@ -70,7 +74,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         this.rootView = inflater.inflate(R.layout.fragment_map, container, false);
-        ((MainActivity) getActivity()).getRepo().addOnRefreshAllSpotsListeners(this);
         this.coordinatorLayout = (CoordinatorLayout) rootView.findViewById(R.id.coord);
         this.slidingUpPanelLayout = rootView.findViewById(R.id.sliding_layout);
         this.fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
@@ -83,10 +86,10 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
         this.btnFavorite.setOnClickListener(v -> {
             if (selectedSpot != null) {
                 if (selectedSpot.isFavorite()) {
-                    selectedSpot.intoFavorite();
+                    selectedSpot.removeIntoFavorite();
                     btnFavorite.setText("To favorite");
                 } else {
-                    selectedSpot.toFavorite();
+                    selectedSpot.addToFavorite();
                     btnFavorite.setText("Into favorite");
                 }
             }
@@ -106,8 +109,9 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
             e.printStackTrace();
         }
         setUpMapIfNeeded();
+        updateMarkers();
         // Restoring the markers on configuration changes
-        Location location = MainActivity.getCurrentLocation();
+        ParseGeoPoint location = MainActivity.getCurrentLocation();
         if (location != null) {
             LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
 
@@ -122,7 +126,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
 
     public void updateMarkers() {
         mMap.clear();
-        Stream.of(((MainActivity) getActivity()).getRepo().getAllSpots()).forEach(this::addMarker);
+        doMapQuery();
     }
 
     private void setUpMapIfNeeded() {
@@ -137,7 +141,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
                 mMap.setOnMarkerClickListener(this);
             }
         }
-        updateMarkers();
     }
 
     @Override
@@ -175,27 +178,36 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
         } else {
             if (showSpotInformation(marker)) {
                 marker.showInfoWindow();
-                expandSlidingPanel();
             }
         }
         return true;
     }
 
     private boolean showSpotInformation(Marker marker) {
-        Optional<Spot> spotOptional = Stream.of(((MainActivity) getActivity()).getRepo().getAllSpots())
-                .filter(spot -> spot.getMarker().equals(marker))
-                .findFirst();
-        if (spotOptional.isPresent()) {
-            selectedSpot = spotOptional.get();
-            if (selectedSpot != null) {
-                spotTitle.setText(selectedSpot.getTitle());
-                spotAuthor.setText(selectedSpot.getAuthor());
-                spotDistance.setText(selectedSpot.getDistance() + "km");
-                spotDescription.setText(selectedSpot.getDescription());
-                if (selectedSpot.isFavorite())
-                    btnFavorite.setText("Into favorite");
-                return true;
-            }
+        if (slidingPanelExpand)
+            narrowSlidingPanel();
+        ParseQuery<Spot> query = Repo.getAllSpots();
+        if (hashMapMarkers.containsKey(marker)) {
+            Log.d(TAG, "contains id: " + hashMapMarkers.get(marker));
+            query.whereEqualTo("objectId", hashMapMarkers.get(marker));
+            query.findInBackground((objects, e) -> {
+                if (e == null) {
+                    if (!objects.isEmpty()) {
+                        selectedSpot = objects.get(0);
+                        spotTitle.setText(selectedSpot.getTitle());
+                        spotAuthor.setText(selectedSpot.getAuthor().getUsername());
+                        spotDistance.setText(selectedSpot.getDistanceTo() + "km");
+                        spotDescription.setText(selectedSpot.getDescription());
+                        if (selectedSpot.isFavorite())
+                            btnFavorite.setText("Into favorite");
+                        if (!slidingPanelExpand)
+                            expandSlidingPanel();
+                    }
+                } else {
+                    Log.d(TAG, "showSpotInformation: " + e.getMessage());
+                }
+            });
+            return true;
         }
         return false;
     }
@@ -224,7 +236,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
 
     private FloatingActionButton.OnClickListener fabClick = new FloatingActionButton.OnClickListener() {
         @Override
-        public void onClick(View v) {
+        public void onClick(@NonNull View v) {
             if (newMarker != null) {
                 //creating dialog object
                 final Dialog d = new Dialog(getActivity());
@@ -243,18 +255,22 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
                 location_edit.getEditText().setText(address);
 
                 add.setOnClickListener(v1 -> {
-                    String title = title_edit.getEditText().getText().toString();
-                    String description = description_edit.getEditText().getText().toString();
+                    String title = title_edit.getEditText().getText().toString().trim();
+                    String description = description_edit.getEditText().getText().toString().trim();
                     if (title.length() != 0 && description.length() != 0) {
-                        Spot newSpot = new Spot(title, description, ((MainActivity) getActivity()).getRepo().getUser().getUsername(),
-                                ((MainActivity) getActivity()).getRepo().getUser().getObjectId(), newMarker.getPosition(), address);
-                        ((MainActivity) getActivity()).getRepo().addSpot(newSpot);
-                        newSpot.save();
-                        addMarker(newSpot);
+                        Spot newSpot = new Spot();
+                        newSpot.setAuthor(ParseUser.getCurrentUser());
+                        newSpot.setTitle(title);
+                        newSpot.setDescription(description);
+                        newSpot.setPosition(new ParseGeoPoint(newMarker.getPosition().latitude, newMarker.getPosition().longitude));
+                        newSpot.setRating(0);
+                        newSpot.saveInBackground(e -> {
+                            Snackbar snackbar = Snackbar.make(coordinatorLayout, "Spot add", Snackbar.LENGTH_SHORT);
+                            snackbar.getView().setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                            snackbar.show();
+                            addMarker(newSpot);
+                        });
                         d.dismiss();
-                        Snackbar snackbar = Snackbar.make(coordinatorLayout, "Spot add", Snackbar.LENGTH_SHORT);
-                        snackbar.getView().setBackgroundColor(getResources().getColor(R.color.colorAccent));
-                        snackbar.show();
                     } else {
                         if (title.length() == 0) title_edit.setError("Title cannot be blank");
                         else title_edit.setError("");
@@ -304,10 +320,27 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
     }
 
     private void addMarker(Spot spot) {
-        spot.setMarker(mMap.addMarker(new MarkerOptions()
-                .position(spot.getPosition())
-                .title(spot.getTitle())
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE))));
+        hashMapMarkers.put(
+                mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(spot.getPosition().getLatitude(), spot.getPosition().getLongitude()))
+                        .title(spot.getTitle())
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE))),
+                spot.getObjectId());
+        Log.d(TAG, "addMarker id: " + spot.getObjectId());
+    }
+
+    private void doMapQuery() {
+        hashMapMarkers.clear();
+        MainActivity.showProgress("Load spots...");
+        Repo.loadAllSpots().findInBackground((objects, e) -> {
+            // Remove the previously cached results.
+            Spot.unpinAllInBackground(e1 -> {
+                // Cache the new results.
+                Spot.pinAllInBackground(objects);
+            });
+            Stream.of(objects).forEach(this::addMarker);
+            MainActivity.hideProgress();
+        });
     }
 
     @Override
@@ -335,11 +368,5 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
     public void onLowMemory() {
         super.onLowMemory();
         mMapView.onLowMemory();
-    }
-
-    @Override
-    public void onLoadAllSpots() {
-        updateMarkers();
-        Log.d(TAG, "onLoadAllSpots");
     }
 }

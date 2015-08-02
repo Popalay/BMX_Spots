@@ -1,18 +1,105 @@
 package com.popalay.bmxspots.models;
 
-import android.location.Location;
+import android.util.Log;
 
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
+import com.parse.ParseClassName;
+import com.parse.ParseException;
 import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseRelation;
 import com.parse.ParseUser;
-import com.popalay.bmxspots.activities.MainActivity;
+import com.popalay.bmxspots.MainActivity;
+import com.popalay.bmxspots.Repo;
 
-public class Spot {
+@ParseClassName("Spot")
+public class Spot extends ParseObject {
 
-    private String ID;
+    public Spot() {
+
+    }
+
+    public ParseUser getAuthor() {
+        return getParseUser("author");
+    }
+
+    public void setAuthor(ParseUser author) {
+        put("author", author);
+    }
+
+    public String getTitle() {
+        return getString("title");
+    }
+
+    public void setTitle(String title) {
+        put("title", title);
+    }
+
+    public String getDescription() {
+        return getString("description");
+    }
+
+    public void setDescription(String description) {
+        put("description", description);
+    }
+
+    public ParseGeoPoint getPosition() {
+        return getParseGeoPoint("position");
+    }
+
+    public void setPosition(ParseGeoPoint position) {
+        put("position", position);
+    }
+
+    public int getRating() {
+        return getInt("rating");
+    }
+
+    public void setRating(int rating) {
+        put("rating", rating);
+    }
+
+    public double getDistanceTo() {
+        double d = getPosition().distanceInKilometersTo(MainActivity.getCurrentLocation());
+        d = Math.round(d * 100);
+        d /= 100;
+        return d;
+    }
+
+    public static ParseQuery<Spot> getQuery() {
+        return ParseQuery.getQuery(Spot.class)
+                .orderByAscending("createdAt");
+    }
+
+    public void addToFavorite() {
+        ParseRelation<Spot> favorites = ParseUser.getCurrentUser().getRelation("favorites");
+        favorites.add(this);
+        ParseUser.getCurrentUser().saveInBackground();
+    }
+
+    public void removeIntoFavorite() {
+        ParseRelation<Spot> favorites = ParseUser.getCurrentUser().getRelation("favorites");
+        favorites.remove(this);
+        ParseUser.getCurrentUser().saveInBackground();
+    }
+
+    public boolean isMy() {
+        return getAuthor() == ParseUser.getCurrentUser();
+    }
+
+    public boolean isFavorite() {
+        int count = 0;
+        try {
+            count = Repo.getFavoriteSpots().whereEqualTo("objectId", getObjectId()).count();
+        } catch (ParseException e) {
+            Log.d("Spot", "Is favorite: " + e.getMessage());
+        }
+                //.countInBackground((i, e) -> Log.d("Spot", "favorite: " + (i > 0)));
+        return count > 0;
+    }
+
+
+    /*private String ID;
     private String title;
     private String description;
     private String author;
@@ -186,5 +273,5 @@ public class Spot {
 
     public boolean isFavorite() {
         return isFavorite;
-    }
+    }*/
 }

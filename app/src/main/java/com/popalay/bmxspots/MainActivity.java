@@ -1,4 +1,4 @@
-package com.popalay.bmxspots.activities;
+package com.popalay.bmxspots;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -25,13 +25,14 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.annimon.stream.Stream;
 import com.github.gorbin.asne.core.SocialNetworkManager;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseUser;
-import com.popalay.bmxspots.R;
-import com.popalay.bmxspots.Repo;
 import com.popalay.bmxspots.fragmets.AuthFragment;
 import com.popalay.bmxspots.fragmets.FavoriteFragment;
 import com.popalay.bmxspots.fragmets.MainFragment;
+import com.popalay.bmxspots.fragmets.MapFragment;
 import com.popalay.bmxspots.fragmets.MyFragment;
 import com.squareup.picasso.Picasso;
 
@@ -52,8 +53,6 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
 
-    private Repo repo;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,7 +62,6 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
             initNavigationDrawer();
             authFragment = new AuthFragment();
             context = this;
-            repo = new Repo();
             toLogin();
         }
     }
@@ -79,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
                 v.animate().rotationBy(360).setInterpolator(new DecelerateInterpolator(0.5f)).start();
                 // create and use new data set
                 Log.d(this.toString(), "refresh clicked");
-                getRepo().loadAllSpots();
+                Stream.of(getSupportFragmentManager().getFragments()).filter(f -> f instanceof MapFragment).forEach(f -> ((MapFragment) f).updateMarkers());
             });
         }
         return super.onCreateOptionsMenu(menu);
@@ -214,16 +212,14 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
     }
 
     private void updateUserInfo() {
-        repo.setUser();
-        if (repo.getUser() != null) {
-            repo.load();
+        if (ParseUser.getCurrentUser() != null) {
             TextView username = (TextView) findViewById(R.id.username);
-            username.setText(repo.getUser().getUsername());
+            username.setText(ParseUser.getCurrentUser().getUsername());
             TextView link = (TextView) findViewById(R.id.link);
-            link.setText(repo.getUser().get("link").toString());
+            link.setText(ParseUser.getCurrentUser().get("link").toString());
             CircleImageView avatar = (CircleImageView) findViewById(R.id.avatar);
             Picasso.with(context)
-                    .load(repo.getUser().get("avatar").toString())
+                    .load(ParseUser.getCurrentUser().get("avatar").toString())
                     .placeholder(R.drawable.user_placeholder)
                     .into(avatar);
         } else {
@@ -236,12 +232,7 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
             mSocialNetworkManager.getSocialNetwork(networkID).logout();
             ParseUser.logOut();
             toLogin();
-            repo.clearMySpots();
         }
-    }
-
-    public Repo getRepo() {
-        return repo;
     }
 
     public boolean isConnectingToInternet() {
@@ -257,13 +248,20 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
         return false;
     }
 
-    public static Location getCurrentLocation() {
+    public static ParseGeoPoint getCurrentLocation() {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         // Create a criteria object to retrieve provider
         Criteria criteria = new Criteria();
         // Get the name of the best provider
         String provider = locationManager.getBestProvider(criteria, true);
         // Get Current Location
-        return locationManager.getLastKnownLocation(provider);
+        Location l = locationManager.getLastKnownLocation(provider);
+        return new ParseGeoPoint(l.getLatitude(), l.getLongitude());
+    }
+
+    @Override
+    protected void onDestroy() {
+        Repo.clearCache();
+        super.onDestroy();
     }
 }

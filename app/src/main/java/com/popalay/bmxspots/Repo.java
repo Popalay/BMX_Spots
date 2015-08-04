@@ -7,7 +7,16 @@ import com.popalay.bmxspots.models.Spot;
 public class Repo {
 
     public static ParseQuery<Spot> loadAllSpots() {
-        return Spot.getQuery().setCachePolicy(ParseQuery.CachePolicy.CACHE_ELSE_NETWORK);
+        MainActivity.showProgress("Load spots...");
+        Spot.getQuery().findInBackground((objects, e) -> {
+            // Remove the previously cached results.
+            Spot.unpinAllInBackground(e1 -> {
+                // Cache the new results.
+                Spot.pinAllInBackground(objects);
+            });
+            MainActivity.hideProgress();
+        });
+        return Spot.getQuery();
     }
 
     public static ParseQuery<Spot> getAllSpots() {

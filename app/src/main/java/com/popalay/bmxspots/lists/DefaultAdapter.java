@@ -13,6 +13,16 @@ import com.popalay.bmxspots.models.Spot;
 
 public class DefaultAdapter extends ParseQueryAdapter<Spot> {
 
+    public interface OnMapClickListener {
+        void onMapClick(Spot spot);
+    }
+
+    private OnMapClickListener onMapClickListener;
+
+    public void setOnMapClickListener(OnMapClickListener listener) {
+        this.onMapClickListener = listener;
+    }
+
     public DefaultAdapter(Context context, QueryFactory<Spot> queryFactory) {
         super(context, queryFactory);
     }
@@ -47,6 +57,8 @@ public class DefaultAdapter extends ParseQueryAdapter<Spot> {
                 btnFavorite.setText("Into favorite");
             }
         });
+        Button btnMap = (Button)v.findViewById(R.id.card_btn_map);
+        btnMap.setOnClickListener(v1 -> onMapClickListener.onMapClick(spot));
         if (spot.isFavorite()) {
             Log.d("Adapter", "Spot is favorite, set text...");
             btnFavorite.setText("Into favorite");

@@ -34,12 +34,15 @@ import com.popalay.bmxspots.fragmets.FavoriteFragment;
 import com.popalay.bmxspots.fragmets.MainFragment;
 import com.popalay.bmxspots.fragmets.MapFragment;
 import com.popalay.bmxspots.fragmets.MyFragment;
+import com.popalay.bmxspots.fragmets.ToMapClickOnFragmentListener;
+import com.popalay.bmxspots.models.Spot;
 import com.squareup.picasso.Picasso;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
-public class MainActivity extends AppCompatActivity implements AuthFragment.AuthFragmentListener {
+public class MainActivity extends AppCompatActivity implements AuthFragment.AuthFragmentListener,
+        ToMapClickOnFragmentListener {
 
     public static final String SOCIAL_NETWORK_TAG = "SocialIntegrationMain.SOCIAL_NETWORK_TAG";
     public static SocialNetworkManager mSocialNetworkManager;
@@ -52,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
 
     private Toolbar toolbar;
     private DrawerLayout drawerLayout;
+    private NavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +81,10 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
                 v.animate().rotationBy(360).setInterpolator(new DecelerateInterpolator(0.5f)).start();
                 // create and use new data set
                 Log.d(this.toString(), "refresh clicked");
-                Stream.of(getSupportFragmentManager().getFragments()).filter(f -> f instanceof MapFragment).forEach(f -> ((MapFragment) f).updateMarkers());
+                Stream.of(getSupportFragmentManager().getFragments()).filter(f -> f instanceof MapFragment).forEach(f -> {
+                    Repo.loadAllSpots();
+                    ((MapFragment) f).updateMarkers();
+                });
             });
         }
         return super.onCreateOptionsMenu(menu);
@@ -90,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
     }
 
     private void initNavigationDrawer() {
-        NavigationView navigationView = (NavigationView) findViewById(R.id.navigation_view);
+        navigationView = (NavigationView) findViewById(R.id.navigation_view);
         navigationView.setNavigationItemSelectedListener(navigationDrawerListener);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer);
         ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.openDrawer, R.string.closeDrawer) {
@@ -211,8 +218,26 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
         updateUserInfo();
     }
 
+    @Override
+    public void toMapClickOnFragment(Spot spot) {
+        if (getSupportFragmentManager().findFragmentByTag(MainFragment.TAG) == null) {
+            /*if (getSupportActionBar() != null)
+                getSupportActionBar().setSubtitle(getResources().getString(R.string.main_string));
+            navigationView.getMenu().getItem(0).setChecked(true);
+            MainFragment mainFragment = MainFragment.newInstance(spot.getObjectId());
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container, mainFragment, MainFragment.TAG)
+                    .commit();*/
+        } else {
+            MainFragment mainFragment = (MainFragment) getSupportFragmentManager().findFragmentByTag(MainFragment.TAG);
+            mainFragment.toMapFragmentAndFindMarker(spot.getObjectId());
+        }
+    }
+
     private void updateUserInfo() {
         if (ParseUser.getCurrentUser() != null) {
+            if (isConnectingToInternet())
+                Repo.loadAllSpots();
             TextView username = (TextView) findViewById(R.id.username);
             username.setText(ParseUser.getCurrentUser().getUsername());
             TextView link = (TextView) findViewById(R.id.link);
@@ -235,13 +260,14 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
         }
     }
 
-    public boolean isConnectingToInternet() {
+    public static boolean isConnectingToInternet() {
         ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivity != null) {
             NetworkInfo[] info = connectivity.getAllNetworkInfo();
             if (info != null)
                 for (NetworkInfo anInfo : info)
                     if (anInfo.getState() == NetworkInfo.State.CONNECTED) {
+                        Log.d("MainActivity", "Network is connected");
                         return true;
                     }
         }
@@ -249,19 +275,17 @@ public class MainActivity extends AppCompatActivity implements AuthFragment.Auth
     }
 
     public static ParseGeoPoint getCurrentLocation() {
-        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        // Create a criteria object to retrieve provider
-        Criteria criteria = new Criteria();
-        // Get the name of the best provider
-        String provider = locationManager.getBestProvider(criteria, true);
-        // Get Current Location
-        Location l = locationManager.getLastKnownLocation(provider);
-        return new ParseGeoPoint(l.getLatitude(), l.getLongitude());
-    }
-
-    @Override
-    protected void onDestroy() {
-        Repo.clearCache();
-        super.onDestroy();
+        if (isConnectingToInternet()) {
+            LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            // Create a criteria object to retrieve provider
+            Criteria criteria = new Criteria();
+            // Get the name of the best provider
+            String provider = locationManager.getBestProvider(criteria, true);
+            // Get Current Location
+            Location l = locationManager.getLastKnownLocation(provider);
+            return new ParseGeoPoint(l.getLatitude(), l.getLongitude());
+        } else {
+            return new ParseGeoPoint(0, 0);
+        }
     }
 }

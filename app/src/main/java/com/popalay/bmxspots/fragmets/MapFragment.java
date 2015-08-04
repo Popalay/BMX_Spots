@@ -11,6 +11,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +22,7 @@ import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.annimon.stream.Optional;
 import com.annimon.stream.Stream;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -32,7 +34,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.parse.ParseGeoPoint;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.popalay.bmxspots.MainActivity;
 import com.popalay.bmxspots.R;
@@ -48,6 +49,8 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
         GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener {
 
     public static final String TAG = "MapFragment";
+
+    private static CameraPosition savedCameraState;
 
     private View rootView;
     private CoordinatorLayout coordinatorLayout;
@@ -68,7 +71,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
     protected TextView spotDistance;
     protected TextView spotDescription;
 
-    //private Button toMap;
     protected Button btnFavorite;
 
     @Override
@@ -111,15 +113,19 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
         setUpMapIfNeeded();
         updateMarkers();
         // Restoring the markers on configuration changes
-        ParseGeoPoint location = MainActivity.getCurrentLocation();
-        if (location != null) {
-            LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        if(savedCameraState != null) {
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(savedCameraState));
+        } else {
+            ParseGeoPoint location = MainActivity.getCurrentLocation();
+            if (location != null) {
+                LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
 
-            CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(myLocation)
-                    .zoom(15)
-                    .build();
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                CameraPosition cameraPosition = new CameraPosition.Builder()
+                        .target(myLocation)
+                        .zoom(15)
+                        .build();
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            }
         }
         mMap.setMyLocationEnabled(true);//выводим индикатор своего местоположения
     }
@@ -170,41 +176,59 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
     @Override
     public boolean onMarkerClick(Marker marker) {
         if (slidingPanelExpand) {
-            if (showSpotInformation(marker)) {
+            if (showSpotInformationBySpotId(hashMapMarkers.get(marker))) {
                 marker.showInfoWindow();
             } else {
                 narrowSlidingPanel();
             }
         } else {
-            if (showSpotInformation(marker)) {
+            if (showSpotInformationBySpotId(hashMapMarkers.get(marker))) {
                 marker.showInfoWindow();
             }
         }
         return true;
     }
 
-    private boolean showSpotInformation(Marker marker) {
+    public void findMarker(String spotId) {
+        if (hashMapMarkers.containsValue(spotId)) {
+            Optional<Marker> markerOptional = Stream.of(hashMapMarkers.keySet())
+                    .filter(key -> TextUtils.equals(hashMapMarkers.get(key), spotId)).findFirst();
+            if (markerOptional.isPresent()) {
+                Marker marker = markerOptional.get();
+                CameraPosition cameraPosition = new CameraPosition.Builder()
+                        .target(marker.getPosition())
+                        .zoom(15)
+                        .build();
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                marker.showInfoWindow();
+                showSpotInformationBySpotId(spotId);
+            }
+        }
+    }
+
+    private void showSpotInformation(Spot spot) {
+        selectedSpot = spot;
+        spotTitle.setText(selectedSpot.getTitle());
+        spotAuthor.setText(selectedSpot.getAuthor().getUsername());
+        spotDistance.setText(selectedSpot.getDistanceTo() + "km");
+        spotDescription.setText(selectedSpot.getDescription());
+        if (selectedSpot.isFavorite())
+            btnFavorite.setText("Into favorite");
+        if (!slidingPanelExpand)
+            expandSlidingPanel();
+    }
+
+    private boolean showSpotInformationBySpotId(String spotId) {
         if (slidingPanelExpand)
             narrowSlidingPanel();
-        ParseQuery<Spot> query = Repo.getAllSpots();
-        if (hashMapMarkers.containsKey(marker)) {
-            Log.d(TAG, "contains id: " + hashMapMarkers.get(marker));
-            query.whereEqualTo("objectId", hashMapMarkers.get(marker));
-            query.findInBackground((objects, e) -> {
+        if (hashMapMarkers.containsValue(spotId)) {
+            Repo.getAllSpots().whereEqualTo("objectId", spotId).findInBackground((objects, e) -> {
                 if (e == null) {
                     if (!objects.isEmpty()) {
-                        selectedSpot = objects.get(0);
-                        spotTitle.setText(selectedSpot.getTitle());
-                        spotAuthor.setText(selectedSpot.getAuthor().getUsername());
-                        spotDistance.setText(selectedSpot.getDistanceTo() + "km");
-                        spotDescription.setText(selectedSpot.getDescription());
-                        if (selectedSpot.isFavorite())
-                            btnFavorite.setText("Into favorite");
-                        if (!slidingPanelExpand)
-                            expandSlidingPanel();
+                        showSpotInformation(objects.get(0));
                     }
                 } else {
-                    Log.d(TAG, "showSpotInformation: " + e.getMessage());
+                    Log.d(TAG, "showSpotInformationByMarker: " + e.getMessage());
                 }
             });
             return true;
@@ -331,16 +355,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
 
     private void doMapQuery() {
         hashMapMarkers.clear();
-        MainActivity.showProgress("Load spots...");
-        Repo.loadAllSpots().findInBackground((objects, e) -> {
-            // Remove the previously cached results.
-            Spot.unpinAllInBackground(e1 -> {
-                // Cache the new results.
-                Spot.pinAllInBackground(objects);
-            });
-            Stream.of(objects).forEach(this::addMarker);
-            MainActivity.hideProgress();
-        });
+        Repo.getAllSpots().findInBackground((objects, e) -> Stream.of(objects).forEach(this::addMarker));
     }
 
     @Override
@@ -368,5 +383,9 @@ public class MapFragment extends Fragment implements GoogleMap.OnMapClickListene
     public void onLowMemory() {
         super.onLowMemory();
         mMapView.onLowMemory();
+    }
+
+    public void saveMapState() {
+        savedCameraState = mMap.getCameraPosition();
     }
 }

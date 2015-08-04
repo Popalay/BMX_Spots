@@ -18,6 +18,8 @@ public class MainFragment extends Fragment {
     public static final String TAG = "MainFragment";
 
     private View rootView;
+    private SmartFragmentStatePagerAdapter adapter;
+    private ViewPager viewPager;
 
     public MainFragment() {
     }
@@ -32,18 +34,17 @@ public class MainFragment extends Fragment {
     private void initTabs() {
         TabLayout tabLayout = (TabLayout) rootView.findViewById(R.id.tab_layout);
         tabLayout.addTab(tabLayout.newTab().setText(getString(R.string.tab_map)));
-        tabLayout.addTab(tabLayout.newTab().setText(getString(R.string.tab_surrounding)));//tabLayout.getTabAt(1).select();
+        tabLayout.addTab(tabLayout.newTab().setText(getString(R.string.tab_surrounding)));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-        final ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.pager);
-        final SmartFragmentStatePagerAdapter adapter = new PagerAdapter(getActivity().getSupportFragmentManager(), tabLayout.getTabCount());
+        viewPager = (ViewPager) rootView.findViewById(R.id.pager);
+        adapter = new PagerAdapter(getActivity().getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 viewPager.setCurrentItem(tab.getPosition());
-                adapter.getRegisteredFragment(tab.getPosition()).onResume();
             }
 
             @Override
@@ -55,5 +56,19 @@ public class MainFragment extends Fragment {
 
             }
         });
+    }
+
+    public void toMapFragmentAndFindMarker(String spotId) {
+        viewPager.setCurrentItem(0, true);
+        MapFragment mapFragment = (MapFragment) adapter.getRegisteredFragment(0);
+        mapFragment.findMarker(spotId);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        adapter.saveState();
+        MapFragment mapFragment = (MapFragment) adapter.getRegisteredFragment(0);
+        mapFragment.saveMapState();
     }
 }

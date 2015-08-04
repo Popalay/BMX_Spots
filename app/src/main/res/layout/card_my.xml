@@ -65,6 +65,13 @@
                 android:layout_height="wrap_content"
                 android:text="To favorite" />
 
+            <Button
+                android:id="@+id/card_btn_map"
+                style="@style/CardButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="To map" />
+
         </LinearLayout>
 
     </LinearLayout>

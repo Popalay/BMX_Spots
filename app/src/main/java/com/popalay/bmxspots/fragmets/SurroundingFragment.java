@@ -1,6 +1,7 @@
 package com.popalay.bmxspots.fragmets;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -16,8 +17,27 @@ public class SurroundingFragment extends Fragment {
 
     public static final String TAG = "SurroundingFragment";
 
+    private ToMapClickOnFragmentListener listener;
+
     private View rootView;
     private DefaultAdapter adapter;
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (activity instanceof ToMapClickOnFragmentListener) {
+            listener = (ToMapClickOnFragmentListener) activity;
+        } else {
+            throw new ClassCastException(activity.toString()
+                    + " must implement ToMapClickOnFragmentListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -30,14 +50,9 @@ public class SurroundingFragment extends Fragment {
         rv.setHasFixedSize(true);*/
 
         adapter = new DefaultAdapter(getActivity(), Repo::getSurroundingSpots);
+        adapter.setOnMapClickListener(listener::toMapClickOnFragment);
         rv.setAdapter(adapter);
 
         return rootView;
-    }
-
-    @Override
-    public void onResume() {
-        adapter.loadObjects();
-        super.onResume();
     }
 }
